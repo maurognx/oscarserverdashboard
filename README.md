@@ -1,6 +1,6 @@
 # OSCAR Server Admin Dashboard
 
-A lightweight, web-based administration panel for the [oscar-server](https://github.com/paulej72/oscar-server) (AIM/ICQ protocol emulator). This tool provides a clean UI to manage users, chat rooms, and active sessions without dealing with complex CLI commands or PowerShell scripts.
+A lightweight, web-based administration panel for the [oscar-server]([(https://github.com/mk6i/open-oscar-server)) (AIM/ICQ protocol emulator). This tool provides a clean UI to manage users, chat rooms, and active sessions without dealing with complex CLI commands or PowerShell scripts.
 
 
 
