@@ -30,8 +30,7 @@ A lightweight, web-based administration panel for the [oscar-server](https://git
     ```
 
 2.  **Verify File Structure and configure your files:**
-    Ensure `admin.html` and `oscar_admin.py` are in the same directory.
-    Configure host parameters in oscar_admin.py.
+    Ensure `admin.html` and `oscar_admin.py` are in the same directory and configure host parameters in oscar_admin.py.
 
 4.  **Run the Dashboard:**
     ```bash
