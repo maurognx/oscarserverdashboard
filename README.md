@@ -29,13 +29,15 @@ A lightweight, web-based administration panel for the [oscar-server](https://git
     cd oscarserverdashboard
     ```
 
-2.  **Verify File Structure:**
+2.  **Verify File Structure and configure your files:**
     Ensure `admin.html` and `oscar_admin.py` are in the same directory.
+    Configure host parameters in oscar_admin.py.
 
-3.  **Run the Dashboard:**
+4.  **Run the Dashboard:**
     ```bash
     python3 oscar_admin.py
     ```
+    
 
 ## 🖥️ Usage
 
