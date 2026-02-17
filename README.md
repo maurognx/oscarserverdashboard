@@ -25,7 +25,7 @@ A lightweight, web-based administration panel for the [oscar-server](https://git
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/maurognx/oscarserverdashboard.git]
+    git clone https://github.com/maurognx/oscarserverdashboard.git
     cd oscarserverdashboard
     ```
 
