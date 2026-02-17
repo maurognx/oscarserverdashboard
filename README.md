@@ -59,4 +59,4 @@ This project solves this by acting as a **Reverse Proxy**:
 Contributions are welcome! If you want to add retro-style CSS skins (Win98/XP style) or new administrative features, feel free to open an Issue or a Pull Request.
 
 ## 📜 License
-This project is open-source under the GPL License. Use it responsibly for your retro-computing labs!
+This project is open-source under the GNU License. Use it responsibly for your retro-computing labs!
