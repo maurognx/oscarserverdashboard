@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSCAR Server Dashboard Pro</title>
+    <style>
+        :root {
+            --primary: #0055ff; --danger: #ff4444; --success: #00c851;
+            --bg: #e9ecef; --dark: #2c3e50; --gold: #f1c40f;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
+        
+        /* Configuration Toolbar */
+        .config-bar { 
+            background: #34495e; color: white; padding: 10px; 
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .config-bar input { width: 300px; border: none; padding: 5px 10px; border-radius: 4px; }
+        .config-bar span { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+
+        header { background: var(--dark); color: white; width: 100%; padding: 20px 0; text-align: center; }
+        .main-container { max-width: 1000px; width: 95%; margin: 20px auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .full-width { grid-column: span 2; }
+        h2 { margin-top: 0; color: var(--dark); font-size: 1.1rem; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .input-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; color: #666; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        button { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--primary); color: white; transition: 0.2s; }
+        button:hover { filter: brightness(1.1); }
+        button.alt { background: #6c757d; }
+        button.del { background: var(--danger); }
+        pre { background: #1e1e1e; color: #9cdcfe; padding: 15px; border-radius: 8px; overflow: auto; max-height: 250px; font-size: 13px; margin-top: 10px; }
+        .badge { background: var(--gold); color: black; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="config-bar">
+    <span>API Host:</span>
+    <input type="text" id="hostUrl" placeholder="http://your-ip:9000/api" onchange="saveHost()">
+    <small id="saveMsg" style="color: var(--success); display: none;">Saved!</small>
+</div>
+
+<header>
+    <h1>OSCAR Admin Panel</h1>
+    <p>User and Chat Room Management (ICQ/AIM)</p>
+</header>
+
+<div class="main-container">
+    <div class="card">
+        <h2>Create User</h2>
+        <div class="input-group">
+            <label>Screen Name (AIM) or UIN (ICQ)</label>
+            <input type="text" id="regName" placeholder="e.g., 100001 or MyNick">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="regPass" placeholder="******">
+        </div>
+        <button style="width:100%" onclick="handleUser()">Register User</button>
+    </div>
+
+    <div class="card">
+        <h2>Chat Rooms</h2>
+        <div class="input-group">
+            <label>Public Room Name</label>
+            <input type="text" id="roomName" placeholder="e.g., Retro_Lounge">
+        </div>
+        <div style="display:flex; gap:10px">
+            <button style="flex:2" onclick="createRoom()">Create Room</button>
+            <button class="alt" style="flex:1" onclick="fetchList('/chat/room/public')">List Rooms</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Queries & Sessions</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
+            <button class="alt" onclick="fetchList('/user')">List All Users</button>
+            <button class="alt" onclick="fetchList('/session')">Active Sessions</button>
+        </div>
+        <div class="input-group" style="margin-top:20px">
+            <label>Change Password (Screen Name)</label>
+            <input type="text" id="pwdName" placeholder="User">
+            <input type="password" id="pwdNew" placeholder="New Password" style="margin-top:5px">
+        </div>
+        <button class="alt" style="width:100%" onclick="changePwd()">Update Password</button>
+    </div>
+
+    <div class="card">
+        <h2>Danger Zone</h2>
+        <div class="input-group">
+            <label>Delete Account</label>
+            <input type="text" id="delName" placeholder="Screen Name">
+        </div>
+        <button class="del" style="width:100%" onclick="deleteUser()">Delete User Permanently</button>
+    </div>
+
+    <div class="card full-width">
+        <h2>Server Response <span id="last-op" class="badge">Ready</span></h2>
+        <pre id="output">{ "info": "Adjust the Host above and trigger a command." }</pre>
+    </div>
+</div>
+
+<script>
+    // Load saved host or use default
+    const hostInput = document.getElementById('hostUrl');
+    const savedHost = localStorage.getItem('oscar_host') || 'http://localhost:9000/api';
+    hostInput.value = savedHost;
+
+    function saveHost() {
+        localStorage.setItem('oscar_host', hostInput.value);
+        const msg = document.getElementById('saveMsg');
+        msg.style.display = 'inline';
+        setTimeout(() => msg.style.display = 'none', 2000);
+    }
+
+    async function call(path, method, body = null) {
+        const out = document.getElementById('output');
+        const badge = document.getElementById('last-op');
+        const baseUrl = hostInput.value.replace(/\/$/, ""); 
+        
+        badge.textContent = `Sending to ${baseUrl}...`;
+        
+        try {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) options.body = JSON.stringify(body);
+
+            const res = await fetch(baseUrl + path, options);
+            const data = await res.json();
+            out.textContent = JSON.stringify(data, null, 4);
+            badge.textContent = `Success (${res.status})`;
+        } catch (e) {
+            out.textContent = "CONNECTION ERROR:\n1. Is the host '" + baseUrl + "' correct?\n2. Is the python proxy running?\n3. Check the terminal for proxy errors.\n\nDetails: " + e.message;
+            badge.textContent = 'Failed';
+        }
+    }
+
+    // Command Handlers
+    const fetchList = (path) => call(path, 'GET');
+
+    function handleUser() {
+        const sn = document.getElementById('regName').value;
+        const pw = document.getElementById('regPass').value;
+        if(!sn || !pw) return alert("Please fill in both name and password!");
+        call('/user', 'POST', { screen_name: sn, password: pw });
+    }
+
+    function createRoom() {
+        const name = document.getElementById('roomName').value;
+        if(!name) return alert("Room name is required");
+        call('/chat/room/public', 'POST', { name });
+    }
+
+    function changePwd() {
+        const sn = document.getElementById('pwdName').value;
+        const pw = document.getElementById('pwdNew').value;
+        if(!sn || !pw) return alert("Fill in user and new password");
+        call('/user/password', 'PUT', { screen_name: sn, password: pw });
+    }
+
+    function deleteUser() {
+        const sn = document.getElementById('delName').value;
+        if(!sn) return;
+        if(confirm(`Are you sure you want to delete ${sn}?`)) {
+            call('/user', 'DELETE', { screen_name: sn });
+        }
+    }
+</script>
+
+</body>
+</html>
